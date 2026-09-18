@@ -59,7 +59,7 @@
             </div>
 
             <div class="scoreboard">
-                <h3 style="margin-top:0; color:#f9e2af; text-align:center;">🏆 Leaderboard</h3>
+                <h3 style="margin-top:0; color:#f9e2af; text-align:center;">🏆 Leaderboard (<span id="playerCount">0</span>)</h3>
                 <div id="scoreboardList"></div>
             </div>
         </div>
@@ -116,10 +116,20 @@
     let currentIndex = 0;
     let timerInterval = null;
 
+    // ดึงผู้เล่นทุกคนจาก Firebase ขึ้นแสดงใน Leaderboard แบบเรียลไทม์
     db.ref('players').on('value', snapshot => {
         const data = snapshot.val() || {};
         const list = document.getElementById('scoreboardList');
-        const sorted = Object.keys(data).map(k => ({name: k, score: data[k].score})).sort((a,b) => b.score - a.score);
+        const keys = Object.keys(data);
+        
+        document.getElementById('playerCount').innerText = keys.length;
+
+        if (keys.length === 0) {
+            list.innerHTML = `<div style="color:#585b70; text-align:center; padding:10px;">Waiting for players to join...</div>`;
+            return;
+        }
+
+        const sorted = keys.map(k => ({name: k, score: data[k].score || 0})).sort((a,b) => b.score - a.score);
         list.innerHTML = sorted.map(p => `
             <div class="score-item">
                 <span>👤 ${p.name}</span>
@@ -128,6 +138,7 @@
         `).join('');
     });
 
+    // ดึงคำตอบเฉพาะที่มีการส่งมาในแต่ละข้อ
     db.ref('answers').on('value', snapshot => {
         const data = snapshot.val() || {};
         const list = document.getElementById('submittedAnswers');
@@ -166,9 +177,7 @@
         document.getElementById('answerText').innerHTML = `<hr style="border:0; border-top:1px solid #585b70; margin:8px 0;"><strong>Character:</strong> ${q.target}<br><strong>Explanation:</strong> ${q.lieReason}`;
         document.getElementById('answerBox').style.display = 'none';
 
-        // ส่งหมายเลขข้อปัจจุบันไปที่ Firebase
         db.ref('currentGame/questionNo').set(index + 1);
-
         db.ref('answers').remove();
         resetTimer();
     }
