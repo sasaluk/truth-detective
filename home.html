@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,6 +24,7 @@
         button.btn-danger { background: #f38ba8; }
         .truth-text { color: #a6e3a1; font-weight: bold; }
         .lie-text { color: #f38ba8; font-weight: bold; }
+        .q-tag { background: #f9e2af; color: #11111b; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -34,18 +35,17 @@
     <div class="game-layout">
         <div>
             <div class="question-box">
-                <h3 id="topicTitle" style="color:#f9e2af; margin-top:0;">โจทย์ที่ 1/20</h3>
+                <h3 id="topicTitle" style="color:#f9e2af; margin-top:0;">Question 1/5</h3>
                 <div id="statementsContainer"></div>
 
-                <!-- คำตอบจากผู้เล่นเรียลไทม์ -->
                 <div style="background:#313244; padding:15px; border-radius:8px; margin-top:15px;">
-                    <h4 style="margin:0 0 10px 0; color:#f9e2af;">📥 คำตอบที่ส่งมาจากมือถือผู้เล่น (เรียลไทม์)</h4>
+                    <h4 style="margin:0 0 10px 0; color:#f9e2af;">📥 Live Answers from Players</h4>
                     <div id="submittedAnswers"></div>
                 </div>
             </div>
 
             <div id="answerBox" style="display:none; background:#2a2b3d; padding:15px; border-radius:8px; margin-top:15px; border:1px dashed #f9e2af;">
-                <h4 style="margin:0 0 10px 0; color:#f9e2af;">🔍 เฉลยสำหรับ Host:</h4>
+                <h4 style="margin:0 0 10px 0; color:#f9e2af;">🔍 Host Answer Key:</h4>
                 <div id="answerDetail"></div>
                 <div id="answerText"></div>
             </div>
@@ -53,27 +53,26 @@
 
         <div>
             <div class="timer-box">
-                <div>⏱️ เวลาส่งคำตอบ</div>
+                <div>⏱️ Time Remaining</div>
                 <div class="timer" id="timer">60</div>
-                <button onclick="startTimer()" style="width:100%; margin-top:5px;">▶️ เริ่มจับเวลา 60s</button>
+                <button onclick="startTimer()" style="width:100%; margin-top:5px;">▶️ Start Timer (60s)</button>
             </div>
 
             <div class="scoreboard">
-                <h3 style="margin-top:0; color:#f9e2af; text-align:center;">🏆 คะแนนรวม</h3>
+                <h3 style="margin-top:0; color:#f9e2af; text-align:center;">🏆 Leaderboard</h3>
                 <div id="scoreboardList"></div>
             </div>
         </div>
     </div>
 
     <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
-        <button class="btn-warning" onclick="toggleAnswer()">👁️ ดูเฉลย</button>
-        <button class="btn-danger" onclick="nextQuestion()">⏭️ ข้อถัดไป</button>
-        <button class="btn-danger" style="background:#ef5777;" onclick="resetAllData()">🔄 รีเซ็ตเกมใหม่ทั้งหมด</button>
+        <button class="btn-warning" onclick="toggleAnswer()">👁️ Show Answer Key</button>
+        <button class="btn-danger" onclick="nextQuestion()">⏭️ Next Question</button>
+        <button class="btn-danger" style="background:#ef5777;" onclick="resetAllData()">🔄 Reset Game</button>
     </div>
 </div>
 
 <script>
-    // Firebase Config ของ Boss LJ
     const firebaseConfig = {
       apiKey: "AIzaSyC_tz6NfILT1SGw1VE3v9f1vGVL0Dy_hlk",
       authDomain: "truth-detective.firebaseapp.com",
@@ -87,30 +86,30 @@
     const db = firebase.database();
 
     const characters = [
-        { title: "คาแรกเตอร์ที่ 1", target: "โดราเอมอน", lieReason: "ไม่มีหูเพราะโดนหนูแทะ ไม่ใช่หูยาวเหมือนกระต่าย", s: [
-            {t: "ฉันมาจากโลกอนาคตในศตวรรษที่ 22", isLie: false},
-            {t: "ฉันชอบกินขนมโดรายากิมากที่สุด", isLie: false},
-            {t: "ฉันมีหูยาวเหมือนกระต่ายและกลัวหนูมาก", isLie: true}
+        { title: "Character #1", target: "Doraemon", lieReason: "Doraemon has no ears because they were eaten by a mouse, not long rabbit ears.", s: [
+            {t: "I came from the future in the 22nd century.", isLie: false},
+            {t: "My absolute favorite food is Dorayaki.", isLie: false},
+            {t: "I have long rabbit ears and I am terrified of mice.", isLie: true}
         ]},
-        { title: "คาแรกเตอร์ที่ 2", target: "กาต้มน้ำ", lieReason: "กาต้มน้ำใช้ทำน้ำร้อน ไม่ใช่เก็บความเย็น", s: [
-            {t: "ฉันตั้งอยู่บนเตาเพื่อทำให้น้ำร้อน", isLie: false},
-            {t: "เมื่อน้ำเดือด ฉันจะส่งเสียงหวีดร้องออกมา", isLie: false},
-            {t: "ฉันเก็บความเย็นให้ไอศกรีมได้ตลอดวัน", isLie: true}
+        { title: "Character #2", target: "Kettle", lieReason: "A kettle is used to heat water, not to keep ice cream cold.", s: [
+            {t: "I sit on a stove to heat up water.", isLie: false},
+            {t: "When water boils, I make a loud whistling sound.", isLie: false},
+            {t: "I am used to keep ice cream frozen all day.", isLie: true}
         ]},
-        { title: "คาแรกเตอร์ที่ 3", target: "สไปเดอร์แมน (Spider-Man)", lieReason: "เศรษฐีพันล้านชุดเกราะคือ ไอรอนแมน สไปเดอร์แมนเป็นเด็กวัยรุ่นถังแตก", s: [
-            {t: "ฉันได้พลังมาจากแมงมุมอาบกรรมรังสี", isLie: false},
-            {t: "ฉันเป็นมหาเศรษฐีพันล้านที่ชอบใส่ชุดเกราะเหล็ก", isLie: true},
-            {t: "ฉันสามารถโหนใยไปมาตามตึกสูงได้", isLie: false}
+        { title: "Character #3", target: "Spider-Man", lieReason: "Iron Man is the billionaire in armor; Spider-Man is a high school student.", s: [
+            {t: "I gained my superpowers from a radioactive spider bite.", isLie: false},
+            {t: "I am a billionaire superhero who wears iron armor.", isLie: true},
+            {t: "I can swing between skyscrapers using webs.", isLie: false}
         ]},
-        { title: "คาแรกเตอร์ที่ 4", target: "ไดโนเสาร์ (T-Rex)", lieReason: "แขนของ T-Rex สั้นมาก เอื้อมไม่ถึงหลัง", s: [
-            {t: "ฉันเป็นนักล่าเนื้อขนาดใหญ่ในยุคดึกดำบรรพ์", isLie: false},
-            {t: "ฉันมีแขนสองข้างที่ยาวมากจนเอื้อมเกาหลังตัวเองได้", isLie: true},
-            {t: "ฟันของฉันคมเหมือนมีดซุย", isLie: false}
+        { title: "Character #4", target: "T-Rex", lieReason: "T-Rex has extremely short arms and cannot reach its own back.", s: [
+            {t: "I am a massive carnivore from prehistoric times.", isLie: false},
+            {t: "I have long arms that easily reach to scratch my back.", isLie: true},
+            {t: "I have sharp teeth like large hunting knives.", isLie: false}
         ]},
-        { title: "คาแรกเตอร์ที่ 5", target: "ซินเดอเรลล่า", lieReason: "รถม้าเสกมาจากฟักทอง ไม่ใช่แตงโม", s: [
-            {t: "ฉันทำรองเท้าแก้วตกไว้ขณะรีบวิ่งออกจากงานเต้นรำ", isLie: false},
-            {t: "รถม้าของฉันทำมาจากผลแตงโมยักษ์", isLie: true},
-            {t: "เวทมนตร์ของนางฟ้าแม่ทูนหัวจะหมดฤทธิ์ตอนเที่ยงคืน", isLie: false}
+        { title: "Character #5", target: "Cinderella", lieReason: "The carriage was made from a pumpkin, not a watermelon.", s: [
+            {t: "I accidentally left a glass slipper behind at the royal ball.", isLie: false},
+            {t: "My magical carriage was transformed from a giant watermelon.", isLie: true},
+            {t: "Fairy Godmother's magic ends precisely at midnight.", isLie: false}
         ]}
     ];
 
@@ -124,7 +123,7 @@
         list.innerHTML = sorted.map(p => `
             <div class="score-item">
                 <span>👤 ${p.name}</span>
-                <span style="color:#f9e2af; font-weight:bold;">${p.score} คะแนน</span>
+                <span style="color:#f9e2af; font-weight:bold;">${p.score} pts</span>
             </div>
         `).join('');
     });
@@ -134,14 +133,18 @@
         const list = document.getElementById('submittedAnswers');
         const keys = Object.keys(data);
         if (keys.length === 0) {
-            list.innerHTML = `<span style="color:#585b70;">ยังไม่มีผู้เล่นส่งคำตอบมา...</span>`;
+            list.innerHTML = `<span style="color:#585b70;">Waiting for player responses...</span>`;
             return;
         }
         list.innerHTML = keys.map(pName => `
             <div class="ans-card">
-                <div><strong>${pName}:</strong> ${data[pName].text}</div>
+                <div>
+                    <strong>${pName}:</strong> 
+                    <span class="q-tag">Q${data[pName].questionNo || '?'}</span>
+                    ${data[pName].text}
+                </div>
                 <button class="${data[pName].scored ? 'btn-success' : ''}" onclick="addScore('${pName}')" ${data[pName].scored ? 'disabled' : ''}>
-                    ${data[pName].scored ? '✓ ได้คะแนนแล้ว' : 'ถูกต้อง (+1)'}
+                    ${data[pName].scored ? '✓ Awarded' : 'Correct (+1)'}
                 </button>
             </div>
         `).join('');
@@ -149,19 +152,22 @@
 
     function loadQuestion(index) {
         const q = characters[index];
-        document.getElementById('topicTitle').innerText = `โจทย์ที่ ${index + 1}/${characters.length}: ${q.title}`;
+        document.getElementById('topicTitle').innerText = `Question ${index + 1}/${characters.length}: ${q.title}`;
         const container = document.getElementById('statementsContainer');
         container.innerHTML = '';
         let answerDetailHTML = '';
 
         q.s.forEach((item, i) => {
-            container.innerHTML += `<div class="statement"><strong>ข้อ ${i+1}:</strong> ${item.t}</div>`;
-            answerDetailHTML += `<div><strong>ข้อ ${i+1}:</strong> ${item.t} -> <span class="${item.isLie ? 'lie-text' : 'truth-text'}">${item.isLie ? '[คำโกหก]' : '[ความจริง]'}</span></div>`;
+            container.innerHTML += `<div class="statement"><strong>Statement ${i+1}:</strong> ${item.t}</div>`;
+            answerDetailHTML += `<div><strong>Statement ${i+1}:</strong> ${item.t} -> <span class="${item.isLie ? 'lie-text' : 'truth-text'}">${item.isLie ? '[LIE]' : '[TRUTH]'}</span></div>`;
         });
 
         document.getElementById('answerDetail').innerHTML = answerDetailHTML;
-        document.getElementById('answerText').innerHTML = `<hr style="border:0; border-top:1px solid #585b70; margin:8px 0;"><strong>เฉลย:</strong> ${q.target}<br><strong>เหตุผล:</strong> ${q.lieReason}`;
+        document.getElementById('answerText').innerHTML = `<hr style="border:0; border-top:1px solid #585b70; margin:8px 0;"><strong>Character:</strong> ${q.target}<br><strong>Explanation:</strong> ${q.lieReason}`;
         document.getElementById('answerBox').style.display = 'none';
+
+        // ส่งหมายเลขข้อปัจจุบันไปที่ Firebase
+        db.ref('currentGame/questionNo').set(index + 1);
 
         db.ref('answers').remove();
         resetTimer();
@@ -180,7 +186,7 @@
             document.getElementById('timer').innerText = timeLeft;
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                alert("หมดเวลาส่งคำตอบ 60 วินาที!");
+                alert("Time is up!");
             }
         }, 1000);
     }
@@ -200,12 +206,12 @@
             currentIndex++;
             loadQuestion(currentIndex);
         } else {
-            alert("จบเกมแล้วครับ!");
+            alert("Game Completed!");
         }
     }
 
     function resetAllData() {
-        if (confirm("ต้องการรีเซ็ตคะแนนและผู้เล่นทั้งหมดใช่ไหมครับ?")) {
+        if (confirm("Reset all player scores and responses?")) {
             db.ref().remove();
             location.reload();
         }
