@@ -35,7 +35,7 @@
     <div class="game-layout">
         <div>
             <div class="question-box">
-                <h3 id="topicTitle" style="color:#f9e2af; margin-top:0;">Question 1/5</h3>
+                <h3 id="topicTitle" style="color:#f9e2af; margin-top:0;">Question 1/20</h3>
                 <div id="statementsContainer"></div>
 
                 <div style="background:#313244; padding:15px; border-radius:8px; margin-top:15px;">
@@ -76,6 +76,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyC_tz6NfILT1SGw1VE3v9f1vGVL0Dy_hlk",
       authDomain: "truth-detective.firebaseapp.com",
+      databaseURL: "https://truth-detective-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "truth-detective",
       storageBucket: "truth-detective.firebasestorage.app",
       messagingSenderId: "1044458468231",
@@ -131,7 +132,7 @@
             {t: "I can shoot flames and erupt lava from my hands.", isLie: true},
             {t: "I built a giant ice palace on the North Mountain.", isLie: false}
         ]},
-        { title: "Character #10", target: "Mario", lieReason: "Mario is a Italian plumber, not a doctor of space engineering.", s: [
+        { title: "Character #10", target: "Mario", lieReason: "Mario is an Italian plumber, not a rocket scientist.", s: [
             {t: "I wear blue overalls, a red cap, and have a thick mustache.", isLie: false},
             {t: "I regularly eat mushrooms to grow bigger.", isLie: false},
             {t: "I am a professional rocket scientist working for NASA.", isLie: true}
@@ -146,42 +147,42 @@
             {t: "I have a bright star-shaped scar on my forehead.", isLie: true},
             {t: "My pet owl is named Hedwig.", isLie: false}
         ]},
-        { title: "Character #13", target: "Sonic the Hedgehog", lieReason: "Sonic is famous for extreme speed, not being super slow.", s: [
+        { title: "Character #13", target: "Sonic the Hedgehog", lieReason: "Sonic moves at extreme speeds, not slow like a turtle.", s: [
             {t: "I am a blue hedgehog who loves collecting gold rings.", isLie: false},
             {t: "I move extremely slowly like a turtle on land.", isLie: true},
             {t: "My arch-enemy is Doctor Eggman.", isLie: false}
         ]},
-        { title: "Character #14", target: "Shrek", lieReason: "Shrek is a green ogre who lives in a swamp, not a gold palace.", s: [
+        { title: "Character #14", target: "Shrek", lieReason: "Shrek lives in a swamp, not a golden palace.", s: [
             {t: "I am a big green ogre who values my privacy.", isLie: false},
             {t: "I live in a golden palace in the middle of a desert.", isLie: true},
             {t: "My chattiest companion is a talking Donkey.", isLie: false}
         ]},
-        { title: "Character #15", target: "Garfield", lieReason: "Garfield loves lasagna and hates Mondays and exercise.", s: [
+        { title: "Character #15", target: "Garfield", lieReason: "Garfield hates Mondays and exercise.", s: [
             {t: "I am a lazy orange tabby cat who loves lasagna.", isLie: false},
             {t: "I love waking up early on Monday mornings to exercise.", isLie: true},
             {t: "My dog friend in the house is named Odie.", isLie: false}
         ]},
-        { title: "Character #16", target: "Pinocchio", lieReason: "Pinocchio's nose grows long when he tells a lie, not when he tells the truth.", s: [
+        { title: "Character #16", target: "Pinocchio", lieReason: "Pinocchio's nose grows long when he lies, not shrinks.", s: [
             {t: "I am a wooden puppet brought to life by magic.", isLie: false},
             {t: "My nose shrinks tiny whenever I tell a lie.", isLie: true},
             {t: "My creator and father is a woodcarver named Geppetto.", isLie: false}
         ]},
-        { title: "Character #17", target: "Thor", lieReason: "Thor wields a hammer named Mjolnir, not a wooden bow.", s: [
+        { title: "Character #17", target: "Thor", lieReason: "Thor uses a hammer (Mjolnir), not a wooden bow.", s: [
             {t: "I am the Asgardian God of Thunder.", isLie: false},
             {t: "My main battle weapon is a wooden bow and arrow.", isLie: true},
             {t: "My adopted brother is the God of Mischief, Loki.", isLie: false}
         ]},
-        { title: "Character #18", target: "Minion", lieReason: "Minions love bananas, speak Minionese, and wear denim overalls.", s: [
+        { title: "Character #18", target: "Minion", lieReason: "Minions speak Minionese, love bananas, and work for Gru.", s: [
             {t: "I am a small yellow creature with one or two eyes.", isLie: false},
             {t: "I wear blue denim overalls and love eating bananas.", isLie: false},
             {t: "I speak fluent French and work as a lawyer in Paris.", isLie: true}
         ]},
-        { title: "Character #19", target: "Tarzan", lieReason: "Tarzan was raised by apes in the jungle, not in an underwater city.", s: [
+        { title: "Character #19", target: "Tarzan", lieReason: "Tarzan was raised by apes in the jungle.", s: [
             {t: "I was raised by gorillas deep inside the jungle.", isLie: false},
             {t: "I lived my entire childhood in a sunken underwater city.", isLie: true},
             {t: "I swing from vine to vine across the rainforest.", isLie: false}
         ]},
-        { title: "Character #20", target: "Aladdin", lieReason: "Aladdin found a magical Genie inside a lamp, not a wooden chest.", s: [
+        { title: "Character #20", target: "Aladdin", lieReason: "Aladdin found a Genie in a lamp, not a treasure chest dragon.", s: [
             {t: "I found a magical lamp containing a wish-granting Genie.", isLie: false},
             {t: "I fly around Agrabah on a magical flying carpet.", isLie: false},
             {t: "I unlocked a magic treasure chest containing a giant dragon.", isLie: true}
@@ -191,20 +192,24 @@
     let currentIndex = 0;
     let timerInterval = null;
 
-    // ดึงผู้เล่นทุกคนจาก Firebase ขึ้นแสดงใน Leaderboard แบบเรียลไทม์
+    // ฟังการเปลี่ยนแปลงใน players
     db.ref('players').on('value', snapshot => {
-        const data = snapshot.val() || {};
         const list = document.getElementById('scoreboardList');
-        const keys = Object.keys(data);
-        
-        document.getElementById('playerCount').innerText = keys.length;
-
-        if (keys.length === 0) {
+        if (!snapshot.exists()) {
+            document.getElementById('playerCount').innerText = "0";
             list.innerHTML = `<div style="color:#585b70; text-align:center; padding:10px;">Waiting for players to join...</div>`;
             return;
         }
 
-        const sorted = keys.map(k => ({name: k, score: data[k].score || 0})).sort((a,b) => b.score - a.score);
+        const data = snapshot.val();
+        const keys = Object.keys(data);
+        document.getElementById('playerCount').innerText = keys.length;
+
+        const sorted = keys.map(k => ({
+            name: k, 
+            score: (data[k] && typeof data[k].score === 'number') ? data[k].score : 0
+        })).sort((a,b) => b.score - a.score);
+
         list.innerHTML = sorted.map(p => `
             <div class="score-item">
                 <span>👤 ${p.name}</span>
@@ -213,21 +218,22 @@
         `).join('');
     });
 
-    // ดึงคำตอบเฉพาะที่มีการส่งมาในแต่ละข้อ
+    // ฟังการส่งคำตอบ
     db.ref('answers').on('value', snapshot => {
-        const data = snapshot.val() || {};
         const list = document.getElementById('submittedAnswers');
-        const keys = Object.keys(data);
-        if (keys.length === 0) {
+        if (!snapshot.exists()) {
             list.innerHTML = `<span style="color:#585b70;">Waiting for player responses...</span>`;
             return;
         }
+
+        const data = snapshot.val();
+        const keys = Object.keys(data);
         list.innerHTML = keys.map(pName => `
             <div class="ans-card">
                 <div>
                     <strong>${pName}:</strong> 
                     <span class="q-tag">Q${data[pName].questionNo || '?'}</span>
-                    ${data[pName].text}
+                    ${data[pName].text || ''}
                 </div>
                 <button class="${data[pName].scored ? 'btn-success' : ''}" onclick="addScore('${pName}')" ${data[pName].scored ? 'disabled' : ''}>
                     ${data[pName].scored ? '✓ Awarded' : 'Correct (+1)'}
