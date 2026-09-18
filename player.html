@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truth Detective - Player Screen</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #1e1e2e; color: #cdd6f4; padding: 20px; margin: 0; }
+        .card { background: #313244; padding: 20px; border-radius: 12px; max-width: 400px; margin: 20px auto; }
+        input, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; font-size: 1em; box-sizing: border-box; }
+        input { background: #181825; color: white; border: 1px solid #45475a; }
+        button { background: #89b4fa; color: #11111b; font-weight: bold; cursor: pointer; }
+        .status { text-align: center; color: #a6e3a1; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card" id="loginBox">
+    <h2>🕵️‍♂️ เข้าร่วมเกม</h2>
+    <input type="text" id="playerName" placeholder="พิมพ์ชื่อของคุณ...">
+    <button onclick="joinGame()">เข้าสู่ห้องเกม</button>
+</div>
+
+<div class="card" id="gameBox" style="display:none;">
+    <h3 id="welcomeText" style="margin-top:0; color:#f9e2af;"></h3>
+    <label>พิมพ์คำตอบของคุณ:</label>
+    <input type="text" id="answerInput" placeholder="เช่น ข้อ 3 โกหก / โดราเอมอน">
+    <button onclick="sendAnswer()">🚀 ส่งคำตอบให้ Host</button>
+    <div id="statusMsg" class="status"></div>
+</div>
+
+<script>
+    // Firebase Config ของ Boss LJ
+    const firebaseConfig = {
+      apiKey: "AIzaSyC_tz6NfILT1SGw1VE3v9f1vGVL0Dy_hlk",
+      authDomain: "truth-detective.firebaseapp.com",
+      projectId: "truth-detective",
+      storageBucket: "truth-detective.firebasestorage.app",
+      messagingSenderId: "1044458468231",
+      appId: "1:1044458468231:web:95b4eb244b787e0a919922",
+      measurementId: "G-441B8HHGDD"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let myName = "";
+
+    function joinGame() {
+        const name = document.getElementById('playerName').value.trim();
+        if (!name) return alert("กรุณาใส่ชื่อด้วยครับ");
+        myName = name;
+        
+        db.ref(`players/${myName}`).once('value', snapshot => {
+            if (!snapshot.exists()) {
+                db.ref(`players/${myName}`).set({ score: 0 });
+            }
+        });
+
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('gameBox').style.display = 'block';
+        document.getElementById('welcomeText').innerText = `👤 ผู้เล่น: ${myName}`;
+    }
+
+    function sendAnswer() {
+        const text = document.getElementById('answerInput').value.trim();
+        if (!text) return alert("กรุณาพิมพ์คำตอบก่อนส่งครับ");
+
+        db.ref(`answers/${myName}`).set({
+            text: text,
+            scored: false
+        });
+
+        document.getElementById('statusMsg').innerText = "✅ ส่งคำตอบเรียบร้อยแล้ว!";
+        setTimeout(() => { document.getElementById('statusMsg').innerText = ""; }, 3000);
+    }
+</script>
+</body>
+</html>
