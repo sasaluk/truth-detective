@@ -25,7 +25,7 @@
 </div>
 
 <div class="card" id="gameBox" style="display:none;">
-    <div class="q-badge" id="questionBadge">Question: Loading...</div>
+    <div class="q-badge" id="questionBadge">Current: Question 1</div>
     <h3 id="welcomeText" style="margin-top:0; color:#f9e2af;"></h3>
     <label>Guess the Character:</label>
     <input type="text" id="answerInput" placeholder="Type character name (e.g., Doraemon)">
@@ -37,6 +37,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyC_tz6NfILT1SGw1VE3v9f1vGVL0Dy_hlk",
       authDomain: "truth-detective.firebaseapp.com",
+      databaseURL: "https://truth-detective-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "truth-detective",
       storageBucket: "truth-detective.firebasestorage.app",
       messagingSenderId: "1044458468231",
@@ -49,26 +50,29 @@
     let myName = "";
     let currentQuestionNo = 1;
 
-    // ติดตามหมายเลขข้อปัจจุบันจาก Host
     db.ref('currentGame/questionNo').on('value', snapshot => {
-        currentQuestionNo = snapshot.val() || 1;
-        document.getElementById('questionBadge').innerText = `Current: Question ${currentQuestionNo}`;
+        if (snapshot.exists()) {
+            currentQuestionNo = snapshot.val();
+            document.getElementById('questionBadge').innerText = `Current: Question ${currentQuestionNo}`;
+        }
     });
 
     function joinGame() {
         const name = document.getElementById('playerName').value.trim();
         if (!name) return alert("Please enter your name!");
         myName = name;
-        
-        db.ref(`players/${myName}`).once('value', snapshot => {
-            if (!snapshot.exists()) {
-                db.ref(`players/${myName}`).set({ score: 0 });
-            }
-        });
 
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('gameBox').style.display = 'block';
-        document.getElementById('welcomeText').innerText = `👤 Player: ${myName}`;
+        // บันทึกชื่อเข้า Firebase พร้อมดัก Error
+        db.ref(`players/${myName}`).set({ score: 0 })
+            .then(() => {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('gameBox').style.display = 'block';
+                document.getElementById('welcomeText').innerText = `👤 Player: ${myName}`;
+            })
+            .catch(error => {
+                alert("Firebase Error: " + error.message);
+                console.error("Join Game Error:", error);
+            });
     }
 
     function sendAnswer() {
@@ -79,10 +83,13 @@
             text: text,
             questionNo: currentQuestionNo,
             scored: false
+        }).then(() => {
+            document.getElementById('statusMsg').innerText = `✅ Submitted for Question ${currentQuestionNo}!`;
+            document.getElementById('answerInput').value = "";
+            setTimeout(() => { document.getElementById('statusMsg').innerText = ""; }, 3000);
+        }).catch(error => {
+            alert("Submit Error: " + error.message);
         });
-
-        document.getElementById('statusMsg').innerText = `✅ Submitted for Question ${currentQuestionNo}!`;
-        setTimeout(() => { document.getElementById('statusMsg').innerText = ""; }, 3000);
     }
 </script>
 </body>
